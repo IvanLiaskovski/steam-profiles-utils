@@ -207,10 +207,34 @@ function getItemMediaData(item: any) {
           item.community_item_data.item_image_large,
           item.community_item_class
         ),
-        videoWebm: item.community_item_data?.item_movie_webm,
-        videoMp4: item.community_item_data?.item_movie_mp4,
-        videoWebmSmall: item.community_item_data?.item_movie_webm_small,
-        videoMp4Small: item.community_item_data?.item_movie_mp4_small,
+        videoWebm: item.community_item_data?.item_movie_webm
+          ? getImageUrl(
+              `${item.appid}`,
+              item.community_item_data?.item_movie_webm,
+              item.community_item_class
+            )
+          : null,
+        videoMp4: item.community_item_data?.item_movie_mp4
+          ? getImageUrl(
+              `${item.appid}`,
+              item.community_item_data?.item_movie_mp4,
+              item.community_item_class
+            )
+          : null,
+        videoWebmSmall: item.community_item_data?.item_movie_webm_small
+          ? getImageUrl(
+              `${item.appid}`,
+              item.community_item_data?.item_movie_webm_small,
+              item.community_item_class
+            )
+          : null,
+        videoMp4Small: item.community_item_data?.item_movie_mp4_small
+          ? getImageUrl(
+              `${item.appid}`,
+              item.community_item_data?.item_movie_mp4_small,
+              item.community_item_class
+            )
+          : null,
       };
     case 16:
       return {
@@ -247,10 +271,22 @@ function getItemMediaData(item: any) {
         imageLarge: getImageUrl(
           `${item.appid}`,
           item.community_item_data.item_image_large,
-          item.community_item_class
+          4
         ),
-        videoWebm: item.community_item_data?.item_movie_webm || null,
-        videoMp4: item.community_item_data?.item_movie_mp4 || null,
+        videoWebm: item.community_item_data?.item_movie_webm
+          ? getImageUrl(
+              `${item.appid}`,
+              item.community_item_data?.item_movie_webm,
+              4
+            )
+          : null,
+        videoMp4: item.community_item_data?.item_movie_mp4
+          ? getImageUrl(
+              `${item.appid}`,
+              item.community_item_data?.item_movie_mp4,
+              4
+            )
+          : null,
       };
     case 12:
       return {
@@ -302,10 +338,34 @@ function getItemMediaData(item: any) {
           item.community_item_data.item_image_large,
           item.community_item_class
         ),
-        videoWebm: item.community_item_data?.item_movie_webm || null,
-        videoMp4: item.community_item_data?.item_movie_mp4 || null,
-        videoWebmSmall: item.community_item_data?.item_movie_webm_small || null,
-        videoMp4Small: item.community_item_data?.item_movie_mp4_small || null,
+        videoWebm: item.community_item_data?.item_movie_webm
+          ? getImageUrl(
+              `${item.appid}`,
+              item.community_item_data?.item_movie_webm,
+              4
+            )
+          : null,
+        videoMp4: item.community_item_data?.item_movie_mp4
+          ? getImageUrl(
+              `${item.appid}`,
+              item.community_item_data?.item_movie_mp4,
+              4
+            )
+          : null,
+        videoWebmSmall: item.community_item_data?.item_movie_webm_small
+          ? getImageUrl(
+              `${item.appid}`,
+              item.community_item_data?.item_movie_webm_small,
+              4
+            )
+          : null,
+        videoMp4Small: item.community_item_data?.item_movie_mp4_small
+          ? getImageUrl(
+              `${item.appid}`,
+              item.community_item_data?.item_movie_mp4_small,
+              4
+            )
+          : null,
       };
     default:
       return {
