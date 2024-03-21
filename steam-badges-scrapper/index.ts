@@ -2,6 +2,21 @@ import puppeteer from "puppeteer-extra";
 import { Browser } from "puppeteer";
 import stealthPlugin from "puppeteer-extra-plugin-stealth";
 import fs from "fs";
+import appendToJSON from "./utils/appendToJSON";
+import {
+  scrapCards,
+  scrapFoilCards,
+  scrapBusterPack,
+  scrapBadges,
+  scrapFoilBadges,
+  scrapEmoticons,
+  scrapBackgrounds,
+  scrapAnimatedStickers,
+  scrapAnimatedBackgrounds,
+  scrapAnimatedMiniBackgrounds,
+  scrapAnimatedFrames,
+  scrapAnimatedAvatars,
+} from "./utils/scrapData";
 
 const gamesFile = fs.readFileSync("./data/steamApps/badges.json", "utf-8");
 const games = JSON.parse(gamesFile);
@@ -20,7 +35,7 @@ const scrape = async () => {
     });*/
 
     await new Promise((resolve) => {
-      setTimeout(resolve, 3000);
+      setTimeout(resolve, 10000);
     });
 
     const result = await page.evaluate(
@@ -31,6 +46,22 @@ const scrape = async () => {
         if (cookieButton) {
           cookieButton.click();
         }
+
+        /*const cards = scrapCards(appId, appName);
+        const foilCards = scrapFoilCards(appId, appName);
+        const busterPacks = scrapBusterPack(appId, appName);
+        const badges = scrapBadges(appId, appName);
+        const foilBadges = scrapFoilBadges(appId, appName);
+        const emoticons = scrapEmoticons(appId, appName);
+        const backgrounds = scrapBackgrounds(appId, appName);
+        const stickers = scrapAnimatedStickers(appId, appName);
+        const animatedBackgrounds = scrapAnimatedBackgrounds(appId, appName);
+        const animatedMiniBackgrounds = scrapAnimatedMiniBackgrounds(
+          appId,
+          appName
+        );
+        const animatedFrames = scrapAnimatedFrames(appId, appName);
+        const animatedAvatars = scrapAnimatedAvatars(appId, appName);*/
 
         const cards = document.querySelector('a[href="#series-1-cards"]')
           ? Array.from(
@@ -55,6 +86,7 @@ const scrape = async () => {
                 cardTitle,
                 tradeLink,
                 order,
+                isFoil: false,
                 appId,
                 appName,
               };
@@ -64,7 +96,7 @@ const scrape = async () => {
         const foilCards = document.querySelector('a[href="#series-1-cards"]')
           ? Array.from(
               document
-                .querySelector('a[href="#series-1-cards"]')
+                .querySelector('a[href="#series-1-foilcards"]')
                 .closest("div")
                 .nextElementSibling.querySelectorAll(".flex.flex-col")
             ).map((item, index) => {
@@ -84,6 +116,7 @@ const scrape = async () => {
                 cardTitle,
                 tradeLink,
                 order,
+                isFoil: true,
                 appId,
                 appName,
               };
@@ -129,7 +162,7 @@ const scrape = async () => {
                 )[1]
                 .textContent.replace(/\D/g, "");
 
-              return { image, title, level, xp, appId, appName };
+              return { image, title, level, xp, isFoil: false, appId, appName };
             })
           : [];
 
@@ -156,7 +189,7 @@ const scrape = async () => {
                 )[1]
                 .textContent.replace(/\D/g, "");
 
-              return { image, title, level, xp, appId, appName };
+              return { image, title, level, xp, isFoil: true, appId, appName };
             })
           : [];
 
@@ -423,10 +456,36 @@ const scrape = async () => {
       { appId, appName }
     );
 
-    const cardsFile = fs.readFileSync("./data/cards/cards.json", "utf-8");
-    const cards = JSON.parse(cardsFile);
-    cards.push(result.cards);
-    fs.writeFileSync("./data/cards/cards.json", JSON.stringify(cards));
+    appendToJSON(
+      [...result.badges, ...result.foilBadges],
+      "./data/badges/badges.json"
+    );
+    appendToJSON(
+      [...result.cards, ...result.foilCards],
+      "./data/cards/cards.json"
+    );
+    appendToJSON(result.busterPacks, "./data/busterPacks/busterPacks.json");
+    appendToJSON(result.stickers, "./data/stickers/stickers.json");
+    appendToJSON(result.emoticons, "./data/emoticons/emoticons.json");
+    appendToJSON(
+      result.animatedBackgrounds,
+      "./data/animatedBackgrounds/animatedBackgrounds.json"
+    );
+    appendToJSON(
+      result.animatedMiniBackgrounds,
+      "./data/animatedMiniBackgrounds/animatedMiniBackgrounds.json"
+    );
+    appendToJSON(
+      result.animatedFrames,
+      "./data/animatedFrames/animatedFrames.json"
+    );
+    appendToJSON(
+      result.animatedAvatars,
+      "./data/animatedAvatars/animatedAvatars.json"
+    );
+    appendToJSON(result.backgrounds, "./data/backgrounds/backgrounds.json");
+    appendToJSON(appId, "./data/ScrappedApps/ScrappedApps.json");
+
     await browser.close();
   }
 };
