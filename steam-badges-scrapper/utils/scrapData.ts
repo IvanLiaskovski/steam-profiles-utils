@@ -1,4 +1,4 @@
-export function scrapCards(appId: number | string, appName: string) {
+export async function scrapCards(appId: number | string, appName: string) {
   return document.querySelector('a[href="#series-1-cards"]')
     ? Array.from(
         document

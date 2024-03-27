@@ -1,45 +1,41 @@
 import puppeteer from "puppeteer-extra";
 import { Browser } from "puppeteer";
+import { scrappedSiteUrl } from "./consts/consts";
 import stealthPlugin from "puppeteer-extra-plugin-stealth";
-import fs from "fs";
-import appendToJSON from "./utils/appendToJSON";
-import {
-  scrapCards,
-  scrapFoilCards,
-  scrapBusterPack,
-  scrapBadges,
-  scrapFoilBadges,
-  scrapEmoticons,
-  scrapBackgrounds,
-  scrapAnimatedStickers,
-  scrapAnimatedBackgrounds,
-  scrapAnimatedMiniBackgrounds,
-  scrapAnimatedFrames,
-  scrapAnimatedAvatars,
-} from "./utils/scrapData";
 
-const gamesFile = fs.readFileSync("./data/steamApps/badges.json", "utf-8");
-const games = JSON.parse(gamesFile);
+import logger from "./utils/logger";
+import getGamesWithBadges from "./utils/getGamesWithBadges";
+import appendToJSON from "./utils/appendToJSON";
 
 puppeteer.use(stealthPlugin());
-const url = `https://www.steamcardexchange.net/index.php?gamepage-appid-`;
 
 const scrape = async () => {
+  const games = await getGamesWithBadges();
+  const url = scrappedSiteUrl;
+
   for (let appId in games) {
+    logger(`Scraping ${games[appId].name}`, "./logs/logs.txt");
+    console.log(`Scraping ${games[appId].name}`);
+
     const appName = games[appId].name;
-    const browser: Browser = await puppeteer.launch({ headless: false });
+
+    const browser: Browser = await puppeteer.launch({
+      args: ["--proxy-server=p.webshare.io:80"],
+    });
     const page = await browser.newPage();
+
+    await page.authenticate({
+      username: process.env.PROXY_USER,
+      password: process.env.PROXY_PASSWORD,
+    });
     await page.goto(`${url}${appId}`);
-    /*await page.screenshot({
-      path: `./data/screenshots/${games[game].name}.png`,
-    });*/
 
     await new Promise((resolve) => {
-      setTimeout(resolve, 10000);
+      setTimeout(resolve, 3000);
     });
 
     const result = await page.evaluate(
-      ({ appId, appName }) => {
+      async ({ appId, appName }) => {
         const cookieButton = document.querySelector(
           'button[title="Accept"]'
         ) as HTMLButtonElement;
@@ -47,22 +43,12 @@ const scrape = async () => {
           cookieButton.click();
         }
 
-        /*const cards = scrapCards(appId, appName);
-        const foilCards = scrapFoilCards(appId, appName);
-        const busterPacks = scrapBusterPack(appId, appName);
-        const badges = scrapBadges(appId, appName);
-        const foilBadges = scrapFoilBadges(appId, appName);
-        const emoticons = scrapEmoticons(appId, appName);
-        const backgrounds = scrapBackgrounds(appId, appName);
-        const stickers = scrapAnimatedStickers(appId, appName);
-        const animatedBackgrounds = scrapAnimatedBackgrounds(appId, appName);
-        const animatedMiniBackgrounds = scrapAnimatedMiniBackgrounds(
-          appId,
-          appName
-        );
-        const animatedFrames = scrapAnimatedFrames(appId, appName);
-        const animatedAvatars = scrapAnimatedAvatars(appId, appName);*/
+        function extractMarketName(url: string) {
+          const match = url.match(/\/\d+\/([\w%-]+)/); // Matching the pattern in the URL
+          return match ? match[1] : null;
+        }
 
+        //ScrapCards
         const cards = document.querySelector('a[href="#series-1-cards"]')
           ? Array.from(
               document
@@ -72,27 +58,31 @@ const scrape = async () => {
             ).map((item, index) => {
               const order = index + 1;
               const wallpaper = item.querySelector("a").getAttribute("href");
-              const cardImage = item.querySelector("img").getAttribute("src");
-              const cardTitle = item.querySelector("img").closest("a")
+              const image = item.querySelector("img").getAttribute("src");
+              const title = item.querySelector("img").closest("a")
                 .nextElementSibling.textContent;
               const tradeLink = item
                 .querySelector("img")
                 .closest("a")
                 .nextElementSibling.nextElementSibling.getAttribute("href");
 
+              const marketName = extractMarketName(tradeLink);
+
               return {
                 wallpaper,
-                cardImage,
-                cardTitle,
+                image,
+                title,
                 tradeLink,
                 order,
                 isFoil: false,
                 appId,
                 appName,
+                marketName,
               };
             })
           : [];
 
+        //ScrapFoilCards
         const foilCards = document.querySelector('a[href="#series-1-cards"]')
           ? Array.from(
               document
@@ -102,27 +92,31 @@ const scrape = async () => {
             ).map((item, index) => {
               const order = index + 1;
               const wallpaper = item.querySelector("a").getAttribute("href");
-              const cardImage = item.querySelector("img").getAttribute("src");
-              const cardTitle = item.querySelector("img").closest("a")
+              const image = item.querySelector("img").getAttribute("src");
+              const title = item.querySelector("img").closest("a")
                 .nextElementSibling.textContent;
               const tradeLink = item
                 .querySelector("img")
                 .closest("a")
                 .nextElementSibling.nextElementSibling.getAttribute("href");
 
+              const marketName = extractMarketName(tradeLink);
+
               return {
                 wallpaper,
-                cardImage,
-                cardTitle,
+                image,
+                title,
                 tradeLink,
                 order,
                 isFoil: true,
                 appId,
                 appName,
+                marketName,
               };
             })
           : [];
 
+        //ScrapBusterPack
         const busterPacks = document.querySelector(
           'a[href="#series-1-booster"]'
         )
@@ -132,15 +126,18 @@ const scrape = async () => {
                 .closest("div")
                 .nextElementSibling.querySelectorAll(".flex.flex-col")
             ).map((item) => {
-              const busterImage = item.querySelector("img").getAttribute("src");
-              const busterLink = item
+              const packImage = item.querySelector("img").getAttribute("src");
+              const tradeLink = item
                 .querySelector("img")
-                .nextElementSibling.getAttribute("href");
+                .nextElementSibling?.getAttribute("href");
 
-              return { busterImage, busterLink, appId, appName };
+              const marketName = extractMarketName(tradeLink);
+
+              return { packImage, tradeLink, appId, appName, marketName };
             })
           : [];
 
+        //ScrapBadges
         const badges = document.querySelector('a[href="#series-1-badges"]')
           ? Array.from(
               document
@@ -166,6 +163,7 @@ const scrape = async () => {
             })
           : [];
 
+        //ScrapFoilBadges
         const foilBadges = document.querySelector(
           'a[href="#series-1-foilbadges"]'
         )
@@ -193,6 +191,7 @@ const scrape = async () => {
             })
           : [];
 
+        //ScrapEmoticons
         const emoticons = document.querySelector(
           'a[href="#series-1-emoticons"]'
         )
@@ -209,24 +208,28 @@ const scrape = async () => {
               const valuable =
                 item.querySelectorAll("img")[1].nextElementSibling
                   .nextElementSibling.textContent;
-              const marketLink = item
+              const tradeLink = item
                 .querySelectorAll("img")[1]
-                .nextElementSibling.nextElementSibling.nextElementSibling.getAttribute(
+                .nextElementSibling?.nextElementSibling?.nextElementSibling?.getAttribute(
                   "href"
                 );
+
+              const marketName = extractMarketName(tradeLink);
 
               return {
                 imageMini,
                 image,
                 title,
                 valuable,
-                marketLink,
+                tradeLink,
                 appId,
                 appName,
+                marketName,
               };
             })
           : [];
 
+        //ScrapBackgrounds
         const backgrounds = document.querySelector(
           'a[href="#series-1-backgrounds"]'
         )
@@ -237,18 +240,20 @@ const scrape = async () => {
                 .nextElementSibling.querySelectorAll(".flex.flex-col")
             ).map((item, index) => {
               const order = index + 1;
-              const wallpaper = item.querySelector("a").getAttribute("href");
-              const image = item.querySelector("img").getAttribute("src");
+              const wallpaper = item.querySelector("a")?.getAttribute("href");
+              const image = item.querySelector("img")?.getAttribute("src");
               const title = item.querySelector("img").closest("a")
                 .nextElementSibling.textContent;
-              const valuable = item.querySelector("img").closest("a")
+              const valuable = item.querySelector("img")?.closest("a")
                 .nextElementSibling.nextElementSibling.textContent;
               const tradeLink = item
                 .querySelector("img")
-                .closest("a")
-                .nextElementSibling.nextElementSibling.nextElementSibling.nextElementSibling.getAttribute(
+                ?.closest("a")
+                .nextElementSibling?.nextElementSibling?.nextElementSibling?.nextElementSibling?.getAttribute(
                   "href"
                 );
+
+              const marketName = extractMarketName(tradeLink);
 
               return {
                 wallpaper,
@@ -259,10 +264,12 @@ const scrape = async () => {
                 valuable,
                 appId,
                 appName,
+                marketName,
               };
             })
           : [];
 
+        //Scraptickers
         const stickers = document.querySelector(
           'a[href="#series-1-animatedstickers"]'
         )
@@ -298,28 +305,29 @@ const scrape = async () => {
             })
           : [];
 
+        //ScrapAnimatedBackgrounds
         const animatedBackgrounds = document.querySelector(
           'a[href="#series-1-animatedbackgrounds"]'
         )
           ? Array.from(
               document
                 .querySelector('a[href="#series-1-animatedbackgrounds"]')
-                .closest("div")
-                .nextElementSibling.querySelectorAll(".flex.flex-col")
+                ?.closest("div")
+                ?.nextElementSibling.querySelectorAll(".flex.flex-col")
             ).map((item, index) => {
               const order = index + 1;
               const videoMp4 = item
                 .querySelector("div")
-                .querySelector("a")
-                .getAttribute("href");
+                ?.querySelector("a")
+                ?.getAttribute("href");
               const imageStatic = item
                 .querySelector("div")
-                .querySelectorAll("a")[1]
-                .getAttribute("href");
+                ?.querySelectorAll("a")[1]
+                ?.getAttribute("href");
               const title =
-                item.querySelectorAll(":scope > div")[2].textContent;
+                item.querySelectorAll(":scope > div")[2]?.textContent;
               const valuable =
-                item.querySelectorAll(":scope > div")[3].textContent;
+                item.querySelectorAll(":scope > div")[3]?.textContent;
 
               return {
                 videoMp4,
@@ -345,16 +353,16 @@ const scrape = async () => {
               const order = index + 1;
               const videoMp4 = item
                 .querySelector("div")
-                .querySelector("a")
-                .getAttribute("href");
+                ?.querySelector("a")
+                ?.getAttribute("href");
               const imageStatic = item
                 .querySelector("div")
-                .querySelectorAll("a")[1]
-                .getAttribute("href");
+                ?.querySelectorAll("a")[1]
+                ?.getAttribute("href");
               const title =
-                item.querySelectorAll(":scope > div")[2].textContent;
+                item.querySelectorAll(":scope > div")[2]?.textContent;
               const valuable =
-                item.querySelectorAll(":scope > div")[3].textContent;
+                item.querySelectorAll(":scope > div")[3]?.textContent;
 
               return {
                 videoMp4,
@@ -368,28 +376,29 @@ const scrape = async () => {
             })
           : [];
 
+        //ScrapAnimatedFrames
         const animatedFrames = document.querySelector(
           'a[href="#series-1-avatarframes"]'
         )
           ? Array.from(
               document
                 .querySelector('a[href="#series-1-avatarframes"]')
-                .closest("div")
-                .nextElementSibling.querySelectorAll(".flex.flex-col")
+                ?.closest("div")
+                ?.nextElementSibling.querySelectorAll(".flex.flex-col")
             ).map((item, index) => {
               const order = index + 1;
               const videoMp4 = item
                 .querySelector("div")
-                .querySelector("a")
-                .getAttribute("href");
+                ?.querySelector("a")
+                ?.getAttribute("href");
               const imageStatic = item
                 .querySelector("div")
-                .querySelectorAll("a")[1]
-                .getAttribute("href");
+                ?.querySelectorAll("a")[1]
+                ?.getAttribute("href");
               const title =
-                item.querySelectorAll(":scope > div")[2].textContent;
+                item.querySelectorAll(":scope > div")[2]?.textContent;
               const valuable =
-                item.querySelectorAll(":scope > div")[3].textContent;
+                item.querySelectorAll(":scope > div")[3]?.textContent;
 
               return {
                 videoMp4,
@@ -403,6 +412,7 @@ const scrape = async () => {
             })
           : [];
 
+        //ScrapAnimatedAvatars
         const animatedAvatars = document.querySelector(
           'a[href="#series-1-avataranimated"]'
         )
@@ -487,7 +497,15 @@ const scrape = async () => {
     appendToJSON(appId, "./data/ScrappedApps/ScrappedApps.json");
 
     await browser.close();
+
+    logger(`Scraped ${games[appId].name}`, "./logs/logs.txt");
+    console.log(`Scraped ${games[appId].name}`);
   }
 };
 
-scrape();
+try {
+  scrape();
+} catch (err) {
+  console.error(err);
+  logger(err, "./logs/errors.txt");
+}
