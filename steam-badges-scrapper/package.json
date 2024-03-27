@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node index.ts"
+    "dev": "ts-node index.ts",
+    "clear": "ts-node clear.ts",
+    "backup": "ts-node backup.ts"
   },
   "author": "",
   "license": "ISC",
@@ -15,6 +17,7 @@
     "typescript": "^5.4.2"
   },
   "dependencies": {
+    "proxy-chain": "^2.4.0",
     "puppeteer": "^22.6.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2"
