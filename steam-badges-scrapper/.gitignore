@@ -2,3 +2,7 @@ node_modules
 coverage
 debug/*.json
 docs/*.js
+.env
+data/**/**/*.json
+data/**/*.json
+data/*.json
