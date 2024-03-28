@@ -2,37 +2,43 @@ import puppeteer from "puppeteer-extra";
 import { Browser } from "puppeteer";
 import { scrappedSiteUrl } from "./consts/consts";
 import stealthPlugin from "puppeteer-extra-plugin-stealth";
+import dotenv from "dotenv";
 
 import logger from "./utils/logger";
 import getGamesWithBadges from "./utils/getGamesWithBadges";
 import appendToJSON from "./utils/appendToJSON";
 
+dotenv.config();
 puppeteer.use(stealthPlugin());
+
+const proxyServer = process.env.PROXY_SERVER;
 
 const scrape = async () => {
   const games = await getGamesWithBadges();
   const url = scrappedSiteUrl;
+
+  const browser: Browser = await puppeteer.launch({
+    args: [`--proxy-server=${proxyServer}`],
+  });
+  const page = await browser.newPage();
+
+  await page.authenticate({
+    username: process.env.PROXY_USER,
+    password: process.env.PROXY_PASSWORD,
+  });
 
   for (let appId in games) {
     logger(`Scraping ${games[appId].name}`, "./logs/logs.txt");
     console.log(`Scraping ${games[appId].name}`);
 
     const appName = games[appId].name;
-
-    const browser: Browser = await puppeteer.launch({
-      args: ["--proxy-server=p.webshare.io:80"],
-    });
-    const page = await browser.newPage();
-
-    await page.authenticate({
-      username: process.env.PROXY_USER,
-      password: process.env.PROXY_PASSWORD,
-    });
     await page.goto(`${url}${appId}`);
 
     await new Promise((resolve) => {
-      setTimeout(resolve, 3000);
+      setTimeout(resolve, 10000);
     });
+
+    //await page.screenshot({ path: `./data/screenshots/${appId}.png` });
 
     const result = await page.evaluate(
       async ({ appId, appName }) => {
@@ -496,11 +502,11 @@ const scrape = async () => {
     appendToJSON(result.backgrounds, "./data/backgrounds/backgrounds.json");
     appendToJSON(appId, "./data/ScrappedApps/ScrappedApps.json");
 
-    await browser.close();
-
     logger(`Scraped ${games[appId].name}`, "./logs/logs.txt");
     console.log(`Scraped ${games[appId].name}`);
   }
+
+  await browser.close();
 };
 
 try {
