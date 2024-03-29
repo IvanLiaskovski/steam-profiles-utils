@@ -27,6 +27,8 @@ const scrape = async () => {
     password: process.env.PROXY_PASSWORD,
   });
 
+  console.log(process.env.PROXY_PASSWORD);
+
   for (let appId in games) {
     logger(`Scraping ${games[appId].name}`, "./logs/logs.txt");
     console.log(`Scraping ${games[appId].name}`);
@@ -35,7 +37,7 @@ const scrape = async () => {
     await page.goto(`${url}${appId}`);
 
     await new Promise((resolve) => {
-      setTimeout(resolve, 10000);
+      setTimeout(resolve, 5000);
     });
 
     //await page.screenshot({ path: `./data/screenshots/${appId}.png` });
@@ -50,6 +52,7 @@ const scrape = async () => {
         }
 
         function extractMarketName(url: string) {
+          if (!url) return null;
           const match = url.match(/\/\d+\/([\w%-]+)/); // Matching the pattern in the URL
           return match ? match[1] : null;
         }
@@ -70,7 +73,7 @@ const scrape = async () => {
               const tradeLink = item
                 .querySelector("img")
                 .closest("a")
-                .nextElementSibling.nextElementSibling.getAttribute("href");
+                .nextElementSibling.nextElementSibling?.getAttribute("href");
 
               const marketName = extractMarketName(tradeLink);
 
@@ -104,7 +107,7 @@ const scrape = async () => {
               const tradeLink = item
                 .querySelector("img")
                 .closest("a")
-                .nextElementSibling.nextElementSibling.getAttribute("href");
+                .nextElementSibling.nextElementSibling?.getAttribute("href");
 
               const marketName = extractMarketName(tradeLink);
 
