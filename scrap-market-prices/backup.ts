@@ -6,6 +6,16 @@ fs.copyFileSync(
 );
 
 fs.copyFileSync(
-  "./data/prices/prices.json",
-  "./data/prices/backup/prices.json"
+  "./data/cardsPrices/cardsPrices.json",
+  "./data/cardsPrices/backup/cardsPrices.json"
+);
+
+fs.copyFileSync(
+  "./data/backgroundPrices/backgroundPrices.json",
+  "./data/backgroundPrices/backup/backgroundPrices.json"
+);
+
+fs.copyFileSync(
+  "./data/emoticonPrices/emoticonPrices.json",
+  "./data/emoticonPrices/backup/emoticonPrices.json"
 );
