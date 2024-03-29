@@ -1,58 +1,86 @@
-import appendToJSON from "./utils/appendToJSON";
+import fs from "fs";
+import { MarketData } from "./types/types";
+import puppeteer from "puppeteer-extra";
+import { Browser } from "puppeteer";
+import stealthPlugin from "puppeteer-extra-plugin-stealth";
+import dotenv from "dotenv";
 import logger from "./utils/logger";
-
 import getGamesWithBadges from "./utils/getGamesWithBadges";
-import { getAppMarketItems } from "./utils/getAppMarketItems";
+import appendToJSON from "./utils/appendToJSON";
 import { generateMarketUrl } from "./utils/generateMarketUrl";
+import { convertMarketData } from "./utils/convertMarketData";
 
-async function scrapSteamMarketPrices() {
+dotenv.config();
+puppeteer.use(stealthPlugin());
+
+const proxiesList = JSON.parse(
+  fs.readFileSync("./data/proxiesList/proxiesList.json", "utf-8")
+);
+
+async function scrapSteamMarketPrices(proxyIndex: number = 0) {
+  const proxyUrl = proxiesList[proxyIndex];
+  logger(`Using proxy ${proxyUrl}`, "./logs/logs.txt");
+  console.log(`Using proxy ${proxyUrl}`);
+
+  const browser: Browser = await puppeteer.launch({
+    args: [`--proxy-server=${proxyUrl}`],
+  });
+
+  const page = await browser.newPage();
+  await page.authenticate({
+    username: process.env.PROXY_USER,
+    password: process.env.PROXY_PASSWORD,
+  });
+
+  let index: number = 0;
   const apps = await getGamesWithBadges();
 
   for (const appId in apps) {
-    logger(`Scrapping ${appId}`, "./logs/logs.txt");
-    console.log(`Scrapping ${appId}`);
+    index++;
+    if (index > 998) break;
+    const appName = apps[appId].name;
 
-    const appMarketItems = getAppMarketItems(apps[appId].appid);
+    logger(`Scrapping ${appName} ${appId}`, "./logs/logs.txt");
+    console.log(`Scrapping ${appName} ${appId}`);
 
-    for (const item in appMarketItems) {
-      await new Promise((resolve) => {
-        setTimeout(resolve, 3500);
-      });
+    await new Promise((resolve) => {
+      setTimeout(resolve, 10500);
+    });
 
-      const tradeLink = appMarketItems[item].tradeLink;
-      const marketAppId = tradeLink.match(/\/(\d+)\//)[1];
-      const marketName = tradeLink.match(/\/listings\/\d+\/(.*)/)[1];
+    const cardsResponse = await fetch(generateMarketUrl(appName, "Card"));
+    const cardsData: MarketData = await cardsResponse.json();
 
-      logger(`Scrapping item ${marketName}(${appId})`, "./logs/logs.txt");
-      console.log(`Scrapping item ${marketName}(${appId})`);
+    const backgroundResponse = await fetch(
+      generateMarketUrl(appName, "Background")
+    );
+    const backgroundData: MarketData = await backgroundResponse.json();
 
-      const marketResponse = await fetch(
-        generateMarketUrl(marketAppId, marketName)
-      );
-      const marketData = await marketResponse.json();
-      const marketPriceItem = {
-        appId,
-        marketAppId,
-        price: marketData.lowest_price,
-        marketName,
-        tradeLink,
-        updatedAt: new Date().toISOString(),
-      };
+    const emoticonResponse = await fetch(
+      generateMarketUrl(appName, "Emoticon")
+    );
+    const emoticonData: MarketData = await emoticonResponse.json();
 
-      appendToJSON([marketPriceItem], "./data/prices/prices.json");
-      appendToJSON(
-        marketName,
-        "./data/scrappedMarketItems/scrappedMarketItems.json"
-      );
-
-      logger(`Scrapped item ${marketName}(${appId})`, "./logs/logs.txt");
-      console.log(`Scrapped item ${marketName}(${appId})`);
-    }
+    appendToJSON(
+      convertMarketData(cardsData, appId, appName),
+      "./data/cardsPrices/cardsPrices.json"
+    );
+    appendToJSON(
+      convertMarketData(backgroundData, appId, appName),
+      "./data/backgroundPrices/backgroundPrices.json"
+    );
+    appendToJSON(
+      convertMarketData(emoticonData, appId, appName),
+      "./data/emoticonPrices/emoticonPrices.json"
+    );
 
     appendToJSON(appId, "./data/ScrappedApps/ScrappedApps.json");
 
-    logger(`Scraped ${appId}`, "./logs/logs.txt");
+    logger(`Scraped ${appName} ${appId}`, "./logs/logs.txt");
     console.log(`Scraped ${appId}`);
+  }
+
+  if (proxyIndex < proxiesList.length - 1) {
+    scrapSteamMarketPrices(proxyIndex + 1);
   }
 }
 
