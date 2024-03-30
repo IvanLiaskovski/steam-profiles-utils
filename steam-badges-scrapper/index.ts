@@ -53,7 +53,7 @@ const scrape = async () => {
 
         function extractMarketName(url: string) {
           if (!url) return null;
-          const match = url.match(/\/\d+\/([\w%-]+)/); // Matching the pattern in the URL
+          const match = url.match(/\/listings\/\d+\/(.*)/);
           return match ? match[1] : null;
         }
 
