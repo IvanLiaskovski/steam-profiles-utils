@@ -28,8 +28,8 @@ async function scrapSteamMarketPrices(proxyIndex: number = 0) {
 
   const page = await browser.newPage();
   await page.authenticate({
-    username: process.env.PROXY_USER,
-    password: process.env.PROXY_PASSWORD,
+    username: process.env.PROXY_USER as string,
+    password: process.env.PROXY_PASSWORD as string,
   });
 
   let index: number = 0;

@@ -24,3 +24,10 @@ export type MarketData = {
     sale_price_text: string;
   }[];
 };
+
+export type SteamApps = {
+  [i: string]: {
+    name: string;
+    size: number;
+  };
+};

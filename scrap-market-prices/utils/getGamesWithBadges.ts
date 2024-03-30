@@ -1,4 +1,5 @@
 import fs from "fs";
+import { SteamApps } from "../types/types";
 import { gameWithBadgesUrl } from "../consts/consts";
 
 export default async function getGamesWithBadges() {
@@ -15,11 +16,10 @@ export default async function getGamesWithBadges() {
     "utf-8"
   );
 
-  console.log("ScrappedGamesFile", scrappedGamesFile);
-  const scrappedGames = JSON.parse(scrappedGamesFile);
+  const scrappedGames: number[] = JSON.parse(scrappedGamesFile);
 
   const gamesFile = fs.readFileSync("./data/steamApps/badges.json", "utf-8");
-  const games = JSON.parse(gamesFile);
+  const games: SteamApps = JSON.parse(gamesFile);
 
   scrappedGames.forEach((key) => {
     if (games.hasOwnProperty(key)) {
