@@ -28,8 +28,12 @@ const scrape = async () => {
   });
 
   console.log(process.env.PROXY_PASSWORD);
+  let requestsIndex = 0;
 
   for (let appId in games) {
+    requestsIndex++;
+    if (requestsIndex >= 50) break;
+
     logger(`Scraping ${games[appId].name}`, "./logs/logs.txt");
     console.log(`Scraping ${games[appId].name}`);
 
@@ -510,6 +514,10 @@ const scrape = async () => {
   }
 
   await browser.close();
+
+  if (Object.keys(games).length > 0) {
+    scrape();
+  }
 };
 
 try {
