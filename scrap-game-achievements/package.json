@@ -1,0 +1,21 @@
+{
+  "name": "scrap-game-achievements",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "ts-node index.ts",
+    "backup": "ts-node backup.ts",
+    "clear": "ts-node clear.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ivan Liaskovskyi",
+  "license": "ISC",
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}
