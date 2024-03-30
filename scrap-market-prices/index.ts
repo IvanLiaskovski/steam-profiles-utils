@@ -18,58 +18,79 @@ const proxiesList = JSON.parse(
 );
 
 async function scrapSteamMarketPrices(proxyIndex: number = 0) {
-  const proxyUrl = proxiesList[proxyIndex];
-  logger(`Using proxy ${proxyUrl}`, "./logs/logs.txt");
-  console.log(`Using proxy ${proxyUrl}`);
-
-  const browser: Browser = await puppeteer.launch({
-    args: [`--proxy-server=${proxyUrl}`],
-  });
-
-  const page = await browser.newPage();
-  await page.authenticate({
-    username: process.env.PROXY_USER as string,
-    password: process.env.PROXY_PASSWORD as string,
-  });
-
   let index: number = 0;
   const apps = await getGamesWithBadges();
 
   for (const appId in apps) {
     index++;
-    if (index > 998) break;
+    if (index >= 249) {
+      index = 0;
+    }
     const appName = apps[appId].name;
 
     logger(`Scrapping ${appName} ${appId}`, "./logs/logs.txt");
     console.log(`Scrapping ${appName} ${appId}`);
 
-    await new Promise((resolve) => {
-      setTimeout(resolve, 10500);
+    const proxyUrl = proxiesList[proxyIndex];
+    logger(`Using proxy ${proxyUrl}`, "./logs/logs.txt");
+    console.log(`Using proxy ${proxyUrl}`);
+
+    const browser: Browser = await puppeteer.launch({
+      args: [`--proxy-server=${proxyUrl}`],
     });
 
-    const cardsResponse = await fetch(generateMarketUrl(appName, "Card"));
-    const cardsData: MarketData = await cardsResponse.json();
+    const page = await browser.newPage();
+    console.log(process.env.PROXY_USER);
+    await page.authenticate({
+      username: process.env.PROXY_USER as string,
+      password: process.env.PROXY_PASSWORD as string,
+    });
 
-    const backgroundResponse = await fetch(
-      generateMarketUrl(appName, "Background")
-    );
-    const backgroundData: MarketData = await backgroundResponse.json();
+    await page.goto(generateMarketUrl(appName, "Card"));
 
-    const emoticonResponse = await fetch(
-      generateMarketUrl(appName, "Emoticon")
-    );
-    const emoticonData: MarketData = await emoticonResponse.json();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3500);
+    });
+
+    const cardsData = await page.evaluate(() => {
+      return document.querySelector("pre")?.textContent;
+    });
+
+    const cardsDataJson: MarketData = JSON.parse(cardsData as string);
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3500);
+    });
+
+    await page.goto(generateMarketUrl(appName, "Background"));
+
+    const backgroundData = await page.evaluate(() => {
+      return document.querySelector("pre")?.textContent;
+    });
+
+    const backgroundDataJson: MarketData = JSON.parse(backgroundData as string);
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3500);
+    });
+
+    await page.goto(generateMarketUrl(appName, "Emoticon"));
+
+    const emoticonData = await page.evaluate(() => {
+      return document.querySelector("pre")?.textContent;
+    });
+    const emoticonDataJson: MarketData = JSON.parse(emoticonData as string);
 
     appendToJSON(
-      convertMarketData(cardsData, appId, appName),
+      convertMarketData(cardsDataJson, appId, appName),
       "./data/cardsPrices/cardsPrices.json"
     );
     appendToJSON(
-      convertMarketData(backgroundData, appId, appName),
+      convertMarketData(backgroundDataJson, appId, appName),
       "./data/backgroundPrices/backgroundPrices.json"
     );
     appendToJSON(
-      convertMarketData(emoticonData, appId, appName),
+      convertMarketData(emoticonDataJson, appId, appName),
       "./data/emoticonPrices/emoticonPrices.json"
     );
 
