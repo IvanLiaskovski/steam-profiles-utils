@@ -73,7 +73,9 @@ const scrape = async () => {
               const wallpaper = item.querySelector("a").getAttribute("href");
               const image = item.querySelector("img").getAttribute("src");
               const title = item.querySelector("img").closest("a")
-                .nextElementSibling.textContent;
+                ? item.querySelector("img").closest("a").nextElementSibling
+                    .textContent
+                : item.querySelector("img").nextElementSibling.textContent;
               const tradeLink = item
                 .querySelector("img")
                 .closest("a")
