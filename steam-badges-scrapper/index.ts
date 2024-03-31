@@ -78,8 +78,8 @@ const scrape = async () => {
                 : item.querySelector("img").nextElementSibling.textContent;
               const tradeLink = item
                 .querySelector("img")
-                .closest("a")
-                .nextElementSibling.nextElementSibling?.getAttribute("href");
+                ?.closest("a")
+                ?.nextElementSibling?.nextElementSibling?.getAttribute("href");
 
               const marketName = extractMarketName(tradeLink);
 
@@ -106,14 +106,16 @@ const scrape = async () => {
                 .nextElementSibling.querySelectorAll(".flex.flex-col")
             ).map((item, index) => {
               const order = index + 1;
-              const wallpaper = item.querySelector("a").getAttribute("href");
+              const wallpaper = item.querySelector("a")?.getAttribute("href");
               const image = item.querySelector("img").getAttribute("src");
               const title = item.querySelector("img").closest("a")
-                .nextElementSibling.textContent;
+                ? item.querySelector("img").closest("a").nextElementSibling
+                    .textContent
+                : item.querySelector("img").nextElementSibling.textContent;
               const tradeLink = item
                 .querySelector("img")
-                .closest("a")
-                .nextElementSibling.nextElementSibling?.getAttribute("href");
+                ?.closest("a")
+                ?.nextElementSibling?.nextElementSibling?.getAttribute("href");
 
               const marketName = extractMarketName(tradeLink);
 
