@@ -70,7 +70,7 @@ const scrape = async () => {
                 .nextElementSibling.querySelectorAll(".flex.flex-col")
             ).map((item, index) => {
               const order = index + 1;
-              const wallpaper = item.querySelector("a").getAttribute("href");
+              const wallpaper = item.querySelector("a")?.getAttribute("href");
               const image = item.querySelector("img").getAttribute("src");
               const title = item.querySelector("img").closest("a")
                 ? item.querySelector("img").closest("a").nextElementSibling
