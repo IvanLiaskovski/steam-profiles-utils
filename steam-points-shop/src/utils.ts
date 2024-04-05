@@ -8,6 +8,7 @@ import * as cheerio from "cheerio";
  * @param {string} idExtractionRegex: Regex that extracts the true app ID from the provided source value (first match only). Defaults to detecting all numbers.
  * @returns {Object} An object containing general info about each app, and the Steam API URL's to query.
  */
+
 export function getConfigData(
   responseData: string,
   urlPrefix: string,
@@ -73,12 +74,16 @@ export function getConfigData(
  * @param {Object} config: A configuration that was returned from `getConfigData()`.
  * @returns {Promise} A promise which returns an object containing Steam API data pertaining to the queried apps.
  */
-export function processConfigData(axiosInstance: any, config: any) {
+export async function processConfigData(axiosInstance: any, config: any) {
   let promises = [];
   for (let i = 0; i < config["urls"].length; i++) {
     promises.push(axiosInstance.get(config["urls"][i]).catch(console.error));
     console.log(`${promises.length} promise(s) are queued.`);
   }
+
+  const apps = await getApps(
+    "https://api.steampowered.com/ISteamApps/GetAppList/v2/"
+  );
 
   let itemMapping = {};
   return Promise.all(promises)
@@ -108,6 +113,7 @@ export function processConfigData(axiosInstance: any, config: any) {
               itemTitle: item.community_item_data.item_title, // This is more consistent than item_title, especially when for Item Bundles
               itemType: getCommunityItemType(item.community_item_class),
               appId: item.appid,
+              appName: apps.find((app) => app.appid === item.appid),
               cost: Number(item.point_cost),
               pointsShopUrl: getPointShopClusterUrl(
                 itemMapping[`${item.appid}`]["pointsShopUrl"],
@@ -497,4 +503,11 @@ export function processConfigDataRecursive(
       );
     })
     .catch(console.error); // Error handling
+}
+
+async function getApps(url: string) {
+  const appsResponse = await fetch(url);
+  const appsData = await appsResponse.json();
+
+  return appsData.applist.apps;
 }
