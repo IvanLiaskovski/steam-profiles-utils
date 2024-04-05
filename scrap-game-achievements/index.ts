@@ -20,19 +20,16 @@ async function scrapAchievements() {
       logger(`Scrapping ${appName} ${appId}`, "./logs/logs.txt");
       console.log(`Scrapping ${appName} ${appId}`);
 
-      await new Promise((resolve) => {
-        setTimeout(resolve, 2000);
-      });
-
-      console.log(
-        `https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=${steamKey}&appid=${appId}`
-      );
-
       const appResponse = await fetch(
         `https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=${steamKey}&appid=${appId}`
       );
       const appData: GameData = await appResponse.json();
-      console.log(appData);
+
+      console.log(
+        "Achievement",
+        appData?.game?.availableGameStats?.achievements?.[0]
+      );
+
       const achievements =
         appData?.game?.availableGameStats?.achievements?.map((achievement) => ({
           ...achievement,
