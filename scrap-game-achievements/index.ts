@@ -38,7 +38,7 @@ async function scrapAchievements() {
         })) || [];
 
       if (achievements?.length > 0) {
-        appendToJSON(achievements, `./data/achievements/achievements.json`);
+        appendToJSON(achievements, `./data/achievements/achievements2.json`);
       }
       appendToJSON(`${appId}`, "./data/ScrappedApps/ScrappedApps.json");
 
