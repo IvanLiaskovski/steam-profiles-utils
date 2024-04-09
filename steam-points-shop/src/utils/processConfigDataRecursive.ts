@@ -45,9 +45,9 @@ export async function processConfigDataRecursive(
 
         // Add extra info about the app, since this is available from the response and discarding all this hard-earned data would be wasteful
         itemMapping[getCommunityItemType(item.community_item_class)].push({
-          itemName: item.community_item_data.item_name,
-          itemTitle: item.community_item_data.item_title, // This is more consistent than item_title, especially when for Item Bundles
-          itemType: getCommunityItemType(item.community_item_class),
+          name: item.community_item_data.item_name,
+          title: item.community_item_data.item_title, // This is more consistent than item_title, especially when for Item Bundles
+          type: getCommunityItemType(item.community_item_class),
           appId: item.appid,
           appName: apps.find((app) => app.appid === item.appid)?.name,
           cost: Number(item.point_cost),
@@ -55,13 +55,13 @@ export async function processConfigDataRecursive(
             config["app"][`${item.appid}`]["pointsShopUrl"],
             item.community_item_class
           ),
-          itemData: getItemMediaData(item),
-          itemDescription: item.internal_description,
+          data: getItemMediaData(item),
+          description: item.internal_description,
           timestampCreated: item.timestamp_created,
           timestampUpdated: item.timestamp_updated,
           timestampAvailable: item.timestamp_available,
-          itemClassId: item.community_item_class,
-          itemTypeId: item.community_item_type,
+          classId: item.community_item_class,
+          typeId: item.community_item_type,
           isActive: item.active,
           isAnimated: item.community_item_data.animated,
         });
