@@ -4,9 +4,10 @@
   "description": "Makeshift search function for the Steam Points Shop",
   "main": "src/generate-search-data.ts",
   "scripts": {
-    "empty-data": "echo var APPDATA = {}; > docs/data.js",
-    "start": "ts-node src/generate-search-data.ts",
-    "start-recursive": "ts-node src/generate-search-data-recursive.ts",
+    "scrap": "ts-node src/generate-search-data.ts",
+    "scrap-recursive": "ts-node src/generate-search-data-recursive.ts",
+    "backup": "ts-node src/backup.ts",
+    "clear": "ts-node src/clear.ts",
     "test": "jest"
   },
   "keywords": [

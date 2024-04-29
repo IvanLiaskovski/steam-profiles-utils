@@ -9,6 +9,33 @@ import getApps from "./getApps";
  * @param {Object} config: A configuration that was returned from `getConfigData()`.
  * @returns {Promise} A promise which returns an object containing Steam API data pertaining to the queried apps.
  */
+
+type SteamReturnedData = {
+  appid: number;
+  defid: number;
+  type: number;
+  community_item_class: number;
+  community_item_type: number;
+  point_cost: string;
+  timestamp_created: number;
+  timestamp_updated: number;
+  timestamp_available: number;
+  timestamp_available_end: number;
+  quantity: string;
+  internal_description: string;
+  active: boolean;
+  community_item_data: {
+    item_name: string;
+    item_title: string;
+    item_description: string;
+    item_image_small: string;
+    item_image_large: string;
+    animated: boolean;
+  };
+  usable_duration: number;
+  bundle_discount: number;
+};
+
 export async function processConfigData(axiosInstance: any, config: any) {
   let promises = [];
   for (let i = 0; i < config["urls"].length; i++) {
@@ -46,7 +73,7 @@ export async function processConfigData(axiosInstance: any, config: any) {
         }
 
         if (endpointData.definitions) {
-          endpointData.definitions.forEach(function (item) {
+          endpointData.definitions.forEach(function (item: SteamReturnedData) {
             // Initial item mapping setup when adding items to this app for the first time
 
             // Add extra info about the app, since this is available from the response and discarding all this hard-earned data would be wasteful
